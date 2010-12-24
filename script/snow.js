@@ -163,7 +163,8 @@ var SnowField = Class.create({
     return this.dimensions.getHeight();
   },
   flakeLanded: function(flake) {
-    return (Math.abs(flake.getY() - this.getGround(flake.getX(), flake.getRadius())) < 2 || flake.getY() > this.dimensions.getHeight());
+    return (Math.abs(flake.getY() - this.getGround(flake.getX(), flake.getRadius())) < 2 || 
+            flake.getY() > this.dimensions.getHeight());
   },
   getGround: function(x, radius) {
     return this.limits[Math.floor(x)] - (radius / 2);
