@@ -7,7 +7,24 @@ Object.extend(CanvasRenderingContext2D.prototype, {
   }
 });
 
-var Oscillator = Class.create({
+var SinusoidalOscillator = Class.create({
+  initialize: function() {
+    this.position = 90;
+    this.direction = (Math.round(Math.random()) == 0);
+  },
+  next: function() {
+    if (this.direction) {
+      this.position = (this.position + 8) % 720;
+    } else {
+      this.position = (this.position - 8) % 720;
+    }
+  },
+  getPercent: function() {
+    return (Math.sin(Math.PI * (this.position / 360)) / 2) + 0.5;
+  }
+});
+
+var SawtoothOscillator = Class.create({
   initialize: function() {
     this.position = 50;
     this.direction = (Math.round(Math.random()) == 0);
@@ -30,10 +47,10 @@ var Oscillator = Class.create({
 var DriftManager = Class.create({
   initialize: function(startX, dimensions) {
     this.x = startX;
-    this.maxWidth = dimensions.getWidth() / 2;
+    this.maxWidth = dimensions.getWidth() / 3;
     this.minWidth = 10;
     this.width = Math.floor(Math.random() * (this.maxWidth - this.minWidth)) + this.minWidth;
-    this.oscillator = new Oscillator();
+    this.oscillator = new SinusoidalOscillator();
     this.direction = Math.round(Math.random()) == 0;
   },
   getX: function() {
