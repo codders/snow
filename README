@@ -1,0 +1,24 @@
+Snow!
+=====
+
+Javascript / Canvas-based snow.
+
+Instructions:
+=============
+
+1. Add a canvas element to your page:
+<canvas id="my_snow" width="200" height="200"/>
+
+2. Create a snow field:
+var snowField = new SnowField("my_snow");
+
+3. Add some snow:
+snowField.addFlakes(350);
+
+Additional Features:
+====================
+
+You can stop and start the snow:
+snowField.stop(); snowField.start();
+
+
