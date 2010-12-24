@@ -62,14 +62,13 @@ var DriftManager = Class.create({
 });
 
 var Flake = Class.create({
-  initialize: function(field) {
-    Object.Event.extend(this);
-    this.field = field;
+  initialize: function(dimensions) {
+    this.fieldDimensions = dimensions;
     this.reset();
   },
   reset: function() {
-    var x = Math.floor(Math.random() * this.field.getWidth());
-    this.driftManager = new DriftManager(x, this.field.getDimensions());
+    var x = Math.floor(Math.random() * this.fieldDimensions.getWidth());
+    this.driftManager = new DriftManager(x, this.fieldDimensions);
     this.y = 0;
     this.radius = Math.floor(Math.random() * 7) + 1;
     this.fallRate = (Math.random() / 2) + 0.5;
@@ -86,11 +85,6 @@ var Flake = Class.create({
   update: function() {
     this.y += this.fallRate;
     this.driftManager.next();
-    if (this.field.flakeLanded(this)) {
-      clearTimeout(this.callback);
-      this.callback = null;
-      this.notify("fallen", this);
-    }
   }
 });
 
@@ -170,12 +164,7 @@ var SnowField = Class.create({
     return this.limits[Math.floor(x)] - (radius / 2);
   },
   addFlake: function() {
-    var flake = new Flake(this);
-    flake.observe("fallen", function(flake) {
-      this.updateFieldDepth(flake.getX());
-      flake.reset();
-    }.bind(this));
-    this.flakes.push(flake);
+    this.flakes.push(new Flake(this));
   },
   addFlakes: function(count) {
     for (var i=0; i < count; i++) {
@@ -199,7 +188,11 @@ var SnowField = Class.create({
   redrawSnow: function() {
     this.flakes.each(function(flake) {
       flake.update();
-    });
+      if (this.flakeLanded(flake)) {
+        this.updateFieldDepth(flake.getX());
+        flake.reset();
+      }
+    }.bind(this));
     this.renderer.drawScreen(this.flakes, this.limits);
   },
   setLimit: function(xPos, value) {
@@ -229,4 +222,3 @@ var SnowField = Class.create({
     this.setLimit(x, this.limits[x] - 1);
   }
 });
-
