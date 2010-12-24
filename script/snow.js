@@ -101,33 +101,53 @@ var Dimensions = Class.create({
   }
 });
 
-var CanvasRenderer = Class.create({
-  initialize: function(element) {
-    this.canvasElement = $(element);
-    this.dimensions = new Dimensions(this.canvasElement.width, this.canvasElement.height);
+var AbstractRenderer = Class.create({
+  initialize: function() {
+    this.flakeViews = $A([]);
   },
   getDimensions: function() {
     return this.dimensions;
   },
-  drawScreen: function(flakes, groundPlane) {
-    var context = this.canvasElement.getContext('2d');
-    context.fillStyle = 'rgb(0,0,0)';
-    context.fillRect(0, 0, this.dimensions.getWidth(), this.dimensions.getHeight());
-    flakes.each(function(flake) {
-      this.drawFlake(flake, context);
+  addFlake: function(flake) {
+    this.flakeViews.push(this.createFlakeView(flake));
+  },
+  addGroundModel: function(ground) {
+    this.groundView = this.createGroundView(ground, this.dimensions);
+  },
+  drawScreen: function() {
+    var context = this.getRenderContext();
+    this.prepareRender(context);
+    this.flakeViews.each(function(flake) {
+      flake.draw(context);
     }.bind(this));
-    this.drawGround(groundPlane, context);
+    if (this.groundView != null) {
+      this.groundView.draw(context);
+    }
+  }
+});
+
+var CanvasFlakeView = Class.create({
+  initialize: function(flake) {
+    this.flake = flake;
   },
-  drawFlake: function(flake, context) {
+  draw: function(context) {
     context.fillStyle = 'rgb(255,255,255)';
-    context.fillCircle(flake.getX(), flake.getY(), flake.getRadius());
+    context.fillCircle(this.flake.getX(), this.flake.getY(), this.flake.getRadius());
+  }
+});
+
+var CanvasGroundView = Class.create({
+  initialize: function(ground, dimensions) {
+    this.ground = ground;
+    this.dimensions = dimensions;
   },
-  drawGround: function(groundPlane, context) {
+  draw: function(context) {
+    var groundLevels = this.ground.getLevels();
     context.fillStyle = 'rgb(255,255,255)';
     context.beginPath();
     context.moveTo(0, parseInt(this.dimensions.getHeight()));
     for (var i=0; i < this.dimensions.getWidth(); i++) {
-      context.lineTo(i, groundPlane[i]);
+      context.lineTo(i, groundLevels[i]);
     }
     context.lineTo(this.dimensions.getWidth(), this.dimensions.getHeight());
     context.closePath();
@@ -135,64 +155,44 @@ var CanvasRenderer = Class.create({
   }
 });
 
-var SnowField = Class.create({
-  initialize: function(canvas) {
-    this.fallTime = 40000;
-    this.renderer = new CanvasRenderer(canvas);
-    this.dimensions = this.renderer.getDimensions();
+var CanvasRenderer = Class.create(AbstractRenderer, {
+  initialize: function($super, element) {
+    $super();
+    this.canvasElement = $(element);
+    this.dimensions = new Dimensions(this.canvasElement.width, this.canvasElement.height);
+  },
+  createFlakeView: function(flake) {
+    return new CanvasFlakeView(flake);
+  },
+  createGroundView: function(ground, dimensions) {
+    return new CanvasGroundView(ground, dimensions);
+  },
+  getRenderContext: function() {
+    return this.canvasElement.getContext('2d');
+  },
+  prepareRender: function(context) {
+    context.fillStyle = 'rgb(0,0,0)';
+    context.fillRect(0, 0, this.dimensions.getWidth(), this.dimensions.getHeight());
+  }
+});
+
+var Ground = Class.create({
+  initialize: function(dimensions) {
+    this.dimensions = dimensions;
     this.limits = [];
     for (var i=0; i<this.dimensions.getWidth(); i++) {
       this.limits[i] = this.dimensions.getHeight();
     }
-    this.flakes = $A([]);
   },
-  getDimensions: function() {
-    return this.dimensions;
+  getLevels: function() {
+    return this.limits;
   },
-  getWidth: function() {
-    return this.dimensions.getWidth();
-  },
-  getHeight: function() {
-    return this.dimensions.getHeight();
-  },
-  flakeLanded: function(flake) {
-    return (Math.abs(flake.getY() - this.getGround(flake.getX(), flake.getRadius())) < 2 || 
-            flake.getY() > this.dimensions.getHeight());
-  },
-  getGround: function(x, radius) {
+  getGroundLevel: function(x, radius) {
     return this.limits[Math.floor(x)] - (radius / 2);
   },
-  addFlake: function() {
-    this.flakes.push(new Flake(this));
-  },
-  addFlakes: function(count) {
-    for (var i=0; i < count; i++) {
-      setTimeout(function() {
-        this.addFlake();
-      }.bind(this), Math.floor(Math.random() * this.fallTime));
-    }
-    this.start();
-  },
-  start: function() {
-    if (this.callback == null) {
-      this.callback = setInterval(this.redrawSnow.bind(this), (this.fallTime / (this.getHeight() * 2)));
-    }
-  },
-  stop: function() {
-    if (this.callback != null) {
-      clearTimeout(this.callback);
-      this.callback = null;
-    }
-  },
-  redrawSnow: function() {
-    this.flakes.each(function(flake) {
-      flake.update();
-      if (this.flakeLanded(flake)) {
-        this.updateFieldDepth(flake.getX());
-        flake.reset();
-      }
-    }.bind(this));
-    this.renderer.drawScreen(this.flakes, this.limits);
+  flakeLanded: function(flake) {
+    return (Math.abs(flake.getY() - this.getGroundLevel(flake.getX(), flake.getRadius())) < 2 || 
+            flake.getY() > this.dimensions.getHeight());
   },
   setLimit: function(xPos, value) {
     if (value < 0) {
@@ -216,8 +216,62 @@ var SnowField = Class.create({
       this.pointTumble(xPos, xPos+1);
     }
   },
-  updateFieldDepth: function(xPos) {
+  updateGroundLevel: function(xPos) {
     var x = Math.floor(xPos);
     this.setLimit(x, this.limits[x] - 1);
+  }
+});
+
+var SnowField = Class.create({
+  initialize: function(canvas) {
+    this.fallTime = 40000;
+    this.renderer = new CanvasRenderer(canvas);
+    this.dimensions = this.renderer.getDimensions();
+    this.ground = new Ground(this.dimensions);
+    this.renderer.addGroundModel(this.ground);
+    this.flakes = $A([]);
+  },
+  getDimensions: function() {
+    return this.dimensions;
+  },
+  getWidth: function() {
+    return this.dimensions.getWidth();
+  },
+  getHeight: function() {
+    return this.dimensions.getHeight();
+  },
+  addFlake: function() {
+    var flake = new Flake(this);
+    this.flakes.push(flake);
+    return flake;
+  },
+  addFlakes: function(count) {
+    for (var i=0; i < count; i++) {
+      setTimeout(function() {
+        this.renderer.addFlake(this.addFlake());
+      }.bind(this), Math.floor(Math.random() * this.fallTime));
+    }
+    this.start();
+  },
+  start: function() {
+    if (this.callback == null) {
+      this.callback = setInterval(this.redrawSnow.bind(this), (this.fallTime / (this.getHeight() * 2)));
+    }
+  },
+  stop: function() {
+    if (this.callback != null) {
+      clearTimeout(this.callback);
+      this.callback = null;
+    }
+  },
+  redrawSnow: function() {
+    this.flakes.each(function(flake) {
+      flake.update();
+      if (this.ground.flakeLanded(flake)) {
+        this.ground.updateGroundLevel(flake.getX());
+        flake.reset();
+      }
+    }.bind(this));
+    this.renderer.drawScreen();
   }
 });
