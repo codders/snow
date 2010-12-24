@@ -9,7 +9,7 @@ Object.extend(CanvasRenderingContext2D.prototype, {
 
 var SinusoidalOscillator = Class.create({
   initialize: function() {
-    this.position = 90;
+    this.position = 360;
     this.direction = (Math.round(Math.random()) == 0);
   },
   next: function() {
@@ -166,7 +166,7 @@ var SnowField = Class.create({
     return (Math.abs(flake.getY() - this.getGround(flake.getX(), flake.getRadius())) < 2 || flake.getY() > this.dimensions.getHeight());
   },
   getGround: function(x, radius) {
-    return this.limits[Math.floor(x)] - (radius /2);
+    return this.limits[Math.floor(x)] - (radius / 2);
   },
   addFlake: function() {
     var flake = new Flake(this);
@@ -208,20 +208,19 @@ var SnowField = Class.create({
     this.limits[xPos] = value;
     this.tumble(xPos);
   },
+  pointTumble: function(from, to) {
+    while(this.limits[to] - this.limits[from] > 1) {
+      this.limits[from] += 1;
+      this.limits[to] -= 1;
+      this.tumble(to);
+    }
+  },
   tumble: function(xPos) {
     if (xPos > 0) {
-      while (this.limits[xPos-1] - this.limits[xPos] > 1) {
-        this.limits[xPos] += 1;
-        this.limits[xPos-1] -= 1;
-        this.tumble(xPos - 1);
-      }
+      this.pointTumble(xPos, xPos-1);
     }
     if (xPos < this.dimensions.getWidth()) {
-      while (this.limits[xPos+1] - this.limits[xPos] > 1) {
-        this.limits[xPos] += 1;
-        this.limits[xPos+1] -= 1;
-        this.tumble(xPos + 1);
-      }
+      this.pointTumble(xPos, xPos+1);
     }
   },
   updateFieldDepth: function(xPos) {
