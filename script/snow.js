@@ -111,7 +111,18 @@ var SnowField = Class.create({
         this.addFlake();
       }.bind(this), Math.floor(Math.random() * (this.canvasElement.height * this.updateInterval)));
     }
-    setInterval(this.redrawSnow.bind(this), 100);
+    this.start();
+  },
+  start: function() {
+    if (this.callback == null) {
+      this.callback = setInterval(this.redrawSnow.bind(this), 100);
+    }
+  },
+  stop: function() {
+    if (this.callback != null) {
+      clearTimeout(this.callback);
+      this.callback = null;
+    }
   },
   redrawSnow: function() {
     var context = this.canvasElement.getContext('2d');
