@@ -28,9 +28,9 @@ var Oscillator = Class.create({
 });
 
 var DriftManager = Class.create({
-  initialize: function(startX, field) {
+  initialize: function(startX, dimensions) {
     this.x = startX;
-    this.maxWidth = field.getWidth() / 2;
+    this.maxWidth = dimensions.getWidth() / 2;
     this.minWidth = 10;
     this.width = Math.floor(Math.random() * (this.maxWidth - this.minWidth)) + this.minWidth;
     this.oscillator = new Oscillator();
@@ -52,7 +52,7 @@ var Flake = Class.create({
   },
   reset: function() {
     var x = Math.floor(Math.random() * this.field.getWidth());
-    this.driftManager = new DriftManager(x, this.field);
+    this.driftManager = new DriftManager(x, this.field.getDimensions());
     this.y = 0;
     this.radius = Math.floor(Math.random() * 7) + 1;
     this.fallRate = (Math.random() / 2) + 0.5;
@@ -60,39 +60,93 @@ var Flake = Class.create({
   getX: function() {
     return this.driftManager.getX();
   },
+  getY: function() {
+    return this.y;
+  },
+  getRadius: function() {
+    return this.radius;
+  },
   update: function() {
     this.y += this.fallRate;
     this.driftManager.next();
-    if (Math.abs(this.y - this.field.getGround(this.driftManager.getX(), this.radius)) < 2 || this.y > this.field.getHeight()) {
+    if (this.field.flakeLanded(this)) {
       clearTimeout(this.callback);
       this.callback = null;
       this.notify("fallen", this);
     }
+  }
+});
+
+var Dimensions = Class.create({
+  initialize: function(width, height) {
+    this.width = width;
+    this.height = height;
   },
-  draw: function(context) {
+  getWidth: function() {
+    return this.width;
+  },
+  getHeight: function() {
+    return this.height;
+  }
+});
+
+var CanvasRenderer = Class.create({
+  initialize: function(element, options) {
+    this.canvasElement = $(element);
+    this.dimensions = new Dimensions(this.canvasElement.width, this.canvasElement.height);
+    this.updateInterval = options["falltime"] / (this.dimensions.getHeight() * 2);
+  },
+  getDimensions: function() {
+    return this.dimensions;
+  },
+  drawScreen: function(flakes, groundPlane) {
+    var context = this.canvasElement.getContext('2d');
+    context.fillStyle = 'rgb(0,0,0)';
+    context.fillRect(0, 0, this.dimensions.getWidth(), this.dimensions.getHeight());
+    flakes.each(function(flake) {
+      this.drawFlake(flake, context);
+    }.bind(this));
+    this.drawGround(groundPlane, context);
+  },
+  drawFlake: function(flake, context) {
     context.fillStyle = "rgb(255,255,255)";
-    context.fillCircle(this.driftManager.getX(), this.y, this.radius);
+    context.fillCircle(flake.getX(), flake.getY(), flake.getRadius());
+  },
+  drawGround: function(groundPlane, context) {
+    context.fillStyle = 'rgb(255,255,255)';
+    context.beginPath();
+    context.moveTo(0, parseInt(this.dimensions.getHeight()));
+    for (var i=0; i < this.dimensions.getWidth(); i++) {
+      context.lineTo(i, groundPlane[i]);
+    }
+    context.lineTo(this.dimensions.getWidth(), this.dimensions.getHeight());
+    context.closePath();
+    context.fill();
   }
 });
 
 var SnowField = Class.create({
   initialize: function(canvas) {
-    this.canvasElement = $(canvas);
+    this.fallTime = 30000;
+    this.renderer = new CanvasRenderer(canvas, { fallTime: this.fallTime });
+    this.dimensions = this.renderer.getDimensions();
     this.limits = [];
-    for (var i=0; i<this.canvasElement.width; i++) {
-      this.limits[i] = this.canvasElement.height;
+    for (var i=0; i<this.dimensions.getWidth(); i++) {
+      this.limits[i] = this.dimensions.getHeight();
     }
-    this.updateInterval = 100;
     this.flakes = $A([]);
   },
-  getContext: function() {
-    return this.canvasElement.getContext('2d');
+  getDimensions: function() {
+    return this.dimensions;
   },
   getWidth: function() {
-    return this.canvasElement.width;
+    return this.dimensions.getWidth();
   },
   getHeight: function() {
-    return this.canvasElement.height;
+    return this.dimensions.getHeight();
+  },
+  flakeLanded: function(flake) {
+    return (Math.abs(flake.getY() - this.getGround(flake.getX(), flake.getRadius())) < 2 || flake.getY() > this.dimensions.getHeight());
   },
   getGround: function(x, radius) {
     return this.limits[Math.floor(x)] - (radius /2);
@@ -109,7 +163,7 @@ var SnowField = Class.create({
     for (var i=0; i < count; i++) {
       setTimeout(function() {
         this.addFlake();
-      }.bind(this), Math.floor(Math.random() * (this.canvasElement.height * this.updateInterval)));
+      }.bind(this), Math.floor(Math.random() * this.fallTime));
     }
     this.start();
   },
@@ -125,25 +179,10 @@ var SnowField = Class.create({
     }
   },
   redrawSnow: function() {
-    var context = this.canvasElement.getContext('2d');
-    context.fillStyle = 'rgb(0,0,0)';
-    context.fillRect(0, 0, this.canvasElement.width, this.canvasElement.height);
     this.flakes.each(function(flake) {
       flake.update();
-      flake.draw(context);
     });
-    this.drawGround(context);
-  },
-  drawGround: function(context) {
-    context.fillStyle = 'rgb(255,255,255)';
-    context.beginPath();
-    context.moveTo(0, parseInt(this.canvasElement.height));
-    for (var i=0; i < this.canvasElement.width; i++) {
-      context.lineTo(i, this.limits[i]);
-    }
-    context.lineTo(this.canvasElement.width, this.canvasElement.height);
-    context.closePath();
-    context.fill();
+    this.renderer.drawScreen(this.flakes, this.limits);
   },
   setLimit: function(xPos, value) {
     if (value < 0) {
@@ -160,7 +199,7 @@ var SnowField = Class.create({
         this.tumble(xPos - 1);
       }
     }
-    if (xPos < this.canvasElement.width) {
+    if (xPos < this.dimensions.getWidth()) {
       while (this.limits[xPos+1] - this.limits[xPos] > 1) {
         this.limits[xPos] += 1;
         this.limits[xPos+1] -= 1;
