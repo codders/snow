@@ -102,10 +102,9 @@ var Dimensions = Class.create({
 });
 
 var CanvasRenderer = Class.create({
-  initialize: function(element, options) {
+  initialize: function(element) {
     this.canvasElement = $(element);
     this.dimensions = new Dimensions(this.canvasElement.width, this.canvasElement.height);
-    this.updateInterval = options["falltime"] / (this.dimensions.getHeight() * 2);
   },
   getDimensions: function() {
     return this.dimensions;
@@ -120,7 +119,7 @@ var CanvasRenderer = Class.create({
     this.drawGround(groundPlane, context);
   },
   drawFlake: function(flake, context) {
-    context.fillStyle = "rgb(255,255,255)";
+    context.fillStyle = 'rgb(255,255,255)';
     context.fillCircle(flake.getX(), flake.getY(), flake.getRadius());
   },
   drawGround: function(groundPlane, context) {
@@ -138,8 +137,8 @@ var CanvasRenderer = Class.create({
 
 var SnowField = Class.create({
   initialize: function(canvas) {
-    this.fallTime = 30000;
-    this.renderer = new CanvasRenderer(canvas, { fallTime: this.fallTime });
+    this.fallTime = 40000;
+    this.renderer = new CanvasRenderer(canvas);
     this.dimensions = this.renderer.getDimensions();
     this.limits = [];
     for (var i=0; i<this.dimensions.getWidth(); i++) {
@@ -176,7 +175,7 @@ var SnowField = Class.create({
   },
   start: function() {
     if (this.callback == null) {
-      this.callback = setInterval(this.redrawSnow.bind(this), 100);
+      this.callback = setInterval(this.redrawSnow.bind(this), (this.fallTime / (this.getHeight() * 2)));
     }
   },
   stop: function() {
