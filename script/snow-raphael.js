@@ -35,11 +35,12 @@ var RaphaelGroundView = Class.create({
 });
 
 var RaphaelRenderer = Class.create(AbstractRenderer, {
-  initialize: function($super, element) {
-    $super();
-    this.dimensions = new Dimensions($(element).getWidth(), $(element).getHeight());
-
-    // Creates canvas 320 × 200 at 10, 50
+  initialize: function($super, dimensions, container) {
+    $super(dimensions);
+    var element = new Element('div');
+    $(container).appendChild(element);
+    element.setStyle({ width: (this.dimensions.getWidth() + "px"),
+                       height: (this.dimensions.getHeight() + "px") });
     this.context = Raphael(element, this.dimensions.getWidth(), this.dimensions.getHeight());
   },
   createFlakeView: function(flake) {

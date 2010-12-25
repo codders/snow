@@ -1,8 +1,20 @@
 var SnowField = Class.create({
-  initialize: function(canvas) {
+  initialize: function(container, options) {
     this.fallTime = 40000;
-    this.renderer = new RaphaelRenderer(canvas);
-    this.dimensions = this.renderer.getDimensions();
+    this.dimensions = new Dimensions(options['width'], options['height']);
+    switch(options['renderer']) {
+      case 'canvas':
+        this.renderer = new CanvasRenderer(this.dimensions, container);
+        break;
+      case 'svg':
+        this.renderer = new RaphaelRenderer(this.dimensions, container);
+        break;
+      case 'css':
+        this.renderer = new CSSRenderer(this.dimensions, container);
+        break;
+      default:
+        alert("Unknown renderer: " + options['renderer']);
+    }
     this.ground = new Ground(this.dimensions);
     this.renderer.addGroundModel(this.ground);
     this.flakes = $A([]);

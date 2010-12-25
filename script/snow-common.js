@@ -102,7 +102,8 @@ var Dimensions = Class.create({
 });
 
 var AbstractRenderer = Class.create({
-  initialize: function() {
+  initialize: function(dimensions) {
+    this.dimensions = dimensions;
     this.flakeViews = $A([]);
   },
   getDimensions: function() {

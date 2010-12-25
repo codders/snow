@@ -28,10 +28,11 @@ var CanvasGroundView = Class.create({
 });
 
 var CanvasRenderer = Class.create(AbstractRenderer, {
-  initialize: function($super, element) {
-    $super();
-    this.canvasElement = $(element);
-    this.dimensions = new Dimensions(this.canvasElement.width, this.canvasElement.height);
+  initialize: function($super, dimensions, container) {
+    $super(dimensions);
+    this.canvasElement = new Element("canvas", { width: this.dimensions.getWidth(),
+                                                 height: this.dimensions.getHeight() });
+    $(container).appendChild(this.canvasElement);
   },
   createFlakeView: function(flake) {
     return new CanvasFlakeView(flake);

@@ -40,15 +40,22 @@ var CSSFlakeView = Class.create({
     this.element.style.setProperty('-moz-border-radius', (flake.getRadius() + "px"), "");
   },
   draw: function(context) {
-    this.element.setStyle({ 'top': this.flake.getY(), left: this.flake.getX() });
+    this.element.setStyle({ 'top': (this.flake.getY() + "px"), left: (this.flake.getX() + "px") });
   }
 });
 
 var CSSRenderer = Class.create(AbstractRenderer, {
-  initialize: function($super, element) {
-    $super();
-    this.element = $(element);
-    this.dimensions = new Dimensions(this.element.getWidth(), this.element.getHeight());
+  initialize: function($super, dimensions, container) {
+    $super(dimensions);
+    this.element = new Element('div');
+    $(container).appendChild(this.element);
+    this.element.setStyle({ position: 'absolute',
+                               width: (this.dimensions.getWidth() + "px"),
+                              height: (this.dimensions.getHeight() + "px"),
+                     backgroundColor: "#000",
+                              zIndex: "-1",
+                            overflow: "hidden" });
+    this.element.update(" ");
   },
   createFlakeView: function(flake) {
     return new CSSFlakeView(flake, this.element);
