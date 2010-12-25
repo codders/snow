@@ -153,17 +153,17 @@ var Ground = Class.create({
     this.tumble(xPos);
   },
   pointTumble: function(from, to) {
-    while(this.limits[to] - this.limits[from] > 1) {
+    while(this.limits[to] - this.limits[from] > 0) {
       this.limits[from] += 1;
       this.limits[to] -= 1;
-      this.tumble(to);
+      this.tumble(to, (from > to ? "left" : "right"));
     }
   },
-  tumble: function(xPos) {
-    if (xPos > 0) {
+  tumble: function(xPos, recur) {
+    if (xPos > 0 && (this.limits[xPos-1] - this.limits[xPos] > (recur == "left" ? 0 : 1))) {
       this.pointTumble(xPos, xPos-1);
     }
-    if (xPos < this.dimensions.getWidth()) {
+    if (xPos < this.dimensions.getWidth() && (this.limits[xPos+1] - this.limits[xPos] > (recur == "right" ? 0 : 1))) {
       this.pointTumble(xPos, xPos+1);
     }
   },
