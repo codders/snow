@@ -12,11 +12,11 @@ You'll need:
 Instructions:
 =============
 
-1. Add a canvas element to your page:
-<canvas id="my_snow" width="200" height="200"/>
+1. Add a div to contain your snow:
+<div id="my_snow"></div>
 
-2. Create a snow field:
-var snowField = new SnowField("my_snow");
+2. Create a snow field. Snow fields need a width, a height, and (optionally) a renderer:
+var snowField = new SnowField("my_snow", { width: 750, height: 400, renderer: 'canvas' });
 
 3. Add some snow:
 snowField.addFlakes(350);
@@ -27,4 +27,7 @@ Additional Features:
 You can stop and start the snow:
 snowField.stop(); snowField.start();
 
+Rendering engine selection:
+===========================
+Snow has a flexible rendering architecture, and includes renderers for canvas, CSS and SVG.
 
