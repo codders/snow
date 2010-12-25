@@ -2,7 +2,9 @@ var SnowField = Class.create({
   initialize: function(container, options) {
     this.fallTime = 40000;
     this.dimensions = new Dimensions(options['width'], options['height']);
-    options['renderer'] ||= 'canvas';
+    if (options['renderer'] == null) {
+      options['renderer'] = 'canvas';
+    }
     switch(options['renderer']) {
       case 'canvas':
         this.renderer = new CanvasRenderer(this.dimensions, container);
