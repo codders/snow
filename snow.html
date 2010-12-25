@@ -1,22 +1,28 @@
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>Snow</title>
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
   google.load("prototype", "1.6");
 </script>
 <script type="text/javascript" src="script/livepipe.js"></script>
+<script type="text/javascript" src="script/snow-common.js"></script>
+<script type="text/javascript" src="script/raphael-min.js"></script>
+<script type="text/javascript" src="script/svg.js"></script>
 <script type="text/javascript" src="script/snow.js"></script>
 </head>
-<body bgcolor="#000000">
+<body style="background-color: black">
 <script>
 
 document.observe("dom:loaded", function() {
-  var snowField = new SnowField("snow_canvas");
+  var snowField = new SnowField("snow_raphael");
   snowField.addFlakes(350);
 });
 
 </script>
-<canvas id="snow_canvas" width="750" height="400"/>
+<!-- <canvas id="snow_canvas" width="750" height="400"></canvas> -->
+<div id="snow_raphael" style="width: 750px; height: 400px"></div>
 </body>
 </html>
