@@ -1,21 +1,26 @@
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>Snow</title>
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
   google.load("prototype", "1.6");
 </script>
 <script type="text/javascript" src="script/livepipe.js"></script>
+<script type="text/javascript" src="script/snow-common.js"></script>
+<script type="text/javascript" src="script/raphael-min.js"></script>
+<script type="text/javascript" src="script/svg.js"></script>
 <script type="text/javascript" src="script/snow.js"></script>
 </head>
-<body bgcolor="#000000">
+<body style="background-color: black">
 <script>
 
 var snowField = null;
 
 document.observe("dom:loaded", function() {
   try {
-    snowField = new SnowField("snow_canvas");
+    snowField = new SnowField("snow_raphael");
     snowField.addFlakes(350);
   } catch (e) {
     alert("Initialization failed: " + e);
@@ -28,6 +33,7 @@ document.observe("dom:loaded", function() {
 <a href="#snow" onclick="snowField.stop()">Stop</a>|<a href="#snow" onclick="snowField.start()">Start</a>
 </div>
 <!-- <canvas id="snow_canvas" width="750" height="400"/> -->
-<div id="snow_canvas" style="position: absolute; width: 750px; height: 400px; background-color: #000; z-index: -1; overflow: hidden">&nbsp;</div>
+<!-- <div id="snow_canvas" style="position: absolute; width: 750px; height: 400px; background-color: #000; z-index: -1; overflow: hidden">&nbsp;</div> -->
+<div id="snow_raphael" style="width: 750px; height: 400px"></div>
 </body>
 </html>
