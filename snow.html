@@ -22,9 +22,15 @@ var snowField = null;
 
 document.observe("dom:loaded", function() {
   try {
+    var queryVars = window.location.search.toQueryParams();
+    var options = { width: 750, height: 400 };
+    if (queryVars['renderer'] != null) {
+      options['renderer'] = queryVars['renderer'];
+    }
     // Renderer can be 'canvas', 'svg' or 'css'
-    snowField = new SnowField("snow", { width: 750, height: 400 });
+    snowField = new SnowField("snow", options);
     snowField.addFlakes(350);
+    snowField.setFramerateDisplay("framerate");
   } catch (e) {
     alert("Initialization failed: " + e);
   }
@@ -33,8 +39,9 @@ document.observe("dom:loaded", function() {
 </script>
 <a name="snow_controls"></a>
 <div>
-<a href="#snow_controls" onclick="snowField.stop()">Stop</a>|<a href="#snow" onclick="snowField.start()">Start</a>
+<a href="#snow_controls" onclick="snowField.stop()">Stop</a>|<a href="#snow" onclick="snowField.start()">Start</a><br/>
 </div>
+<div style="color: #ffffff"><span>Rendertime Millis: </span><span id="framerate">...</span></div>
 <div id="snow"></div>
 </body>
 </html>

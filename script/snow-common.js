@@ -1,3 +1,22 @@
+var Log = Class.create({
+  initialize: function(console) {
+    Object.Event.extend(this);
+    this.console = console;
+  },
+  log: function(str) {
+    if (this.console != undefined) {
+      this.console.log(str);
+    }
+    this.notify("debug", str);
+  }
+});
+
+try {
+  var logger = new Log(console);
+} catch(e) {
+  var logger = new Log(undefined);
+}
+
 Object.extend(CanvasRenderingContext2D.prototype, {
   fillCircle:function(aX, aY, aDiameter){
       this.beginPath();
