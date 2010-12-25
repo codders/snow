@@ -23,7 +23,7 @@ var snowField = null;
 document.observe("dom:loaded", function() {
   try {
     // Renderer can be 'canvas', 'svg' or 'css'
-    snowField = new SnowField("snow", { width: 750, height: 400, renderer: 'css' });
+    snowField = new SnowField("snow", { width: 750, height: 400, renderer: 'canvas' });
     snowField.addFlakes(350);
   } catch (e) {
     alert("Initialization failed: " + e);
